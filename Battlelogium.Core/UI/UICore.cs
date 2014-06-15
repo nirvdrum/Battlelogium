@@ -13,7 +13,7 @@ using Battlelogium.Core.ManagedOrigin;
 using Battlelogium.Utilities;
 using System.Diagnostics;
 using System.Net;
-using Battlelogium.Installer;
+using Battlelogium.Core.Update;
 
 namespace Battlelogium.Core.UI
 {

@@ -34,7 +34,6 @@ namespace Battlelogium.Installer
             InitializeComponent();
             if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
             SetInstallPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),"Battlelogium"));
-
         }
 
         private void installButton_Click(object sender, RoutedEventArgs e)
@@ -56,7 +55,6 @@ namespace Battlelogium.Installer
             this.downloader = new WebClient();
             progressBar.IsIndeterminate = true;
             if(!this.dependencies.IsOriginInstalled) await InstallOrigin();
-            if (!this.dependencies.IsWebPluginInstalled) await InstallWebPlugins();
             try
             {
                 if (!Directory.Exists(installPath)) Directory.CreateDirectory(installPath);
@@ -68,24 +66,33 @@ namespace Battlelogium.Installer
                 Environment.Exit(1);
             }
             this.Hide();
-            bool? success = new UIUpdater(installPath).ShowDialog();
-            if (success == null || success == false) Environment.Exit(1);
-            MessageBoxResult desktopShortcuts = MessageBox.Show("Create shortcuts on the desktop?", "Add shortcuts", MessageBoxButton.OKCancel);
-            if (desktopShortcuts.Equals(MessageBoxResult.OK))
+            string url = await InstallerCommon.GetDownload("battlelogium");
+            var dl = new UIDownloader(url, "package.zip", "Downloading Battlelogium ...");
+            dl.DownloadComplete += async (s, e) =>
             {
-                CreateShortcut("Battlelogium - Battlefield 3.lnk", "Play Battlefield 3", Path.Combine(installPath, "Battlelogium.UI.BF3.exe"));
-                CreateShortcut("Battlelogium - Battlefield 4.lnk", "Play Battlefield 4", Path.Combine(installPath, "Battlelogium.UI.BF4.exe"));
+                await InstallerCommon.ExtractZipFile(e.completedFilePath, installPath);
+                dl.SyncCloseWindow();
+                new UIComplete(installPath).Show();
+                this.Close();
+            };
+            dl.Show();
+            dl.Start();
+        } 
 
-            }
+        
+        public void FinalizeInstall()
+        {
+            
             MessageBoxResult steamShortcuts = MessageBox.Show("Add Battlelogium to Steam as a non-Steam game?", "Add Steam shortcuts", MessageBoxButton.OKCancel);
             try
             {
                 if (steamShortcuts.Equals(MessageBoxResult.OK))
                 {
                     Process.Start("taskkill", "/im steam.exe /f").WaitForExit();
-                    Process.Start(new ProcessStartInfo(){
-                        FileName = Path.Combine(installPath, "Battlelogium.ExecUtils.exe"), 
-                        Arguments="addsteam",
+                    Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = Path.Combine(installPath, "Battlelogium.ExecUtils.exe"),
+                        Arguments = "addsteam",
                         WorkingDirectory = installPath,
                     });
                 }
@@ -96,10 +103,9 @@ namespace Battlelogium.Installer
             {
 
             }
-           Process.Start("taskkill", "/im origin.exe /f").WaitForExit(); //Kill any elevated instances of origin.
-           this.Close();
+            Process.Start("taskkill", "/im origin.exe /f").WaitForExit(); //Kill any elevated instances of origin.
+            this.Close();
         }
-
         public void CreateShortcut(string shortcutName, string description, string exePath)
         {
             object shDesktop = (object)"Desktop";
@@ -114,11 +120,6 @@ namespace Battlelogium.Installer
         public async Task InstallOrigin()
         {
             await InstallDependency("origin", "Origin");
-        }
-
-        public async Task InstallWebPlugins()
-        {
-            await InstallDependency("webplugin", "Battlelog Web Plugins");
         }
 
         public async Task InstallDependency(string downloadKey, string labelName)
