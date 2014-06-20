@@ -3,6 +3,7 @@
 /// <reference path="dialog/battlelog.bf3.dialog.js" />
 /// <reference path="stats/battlelog.bf3.stats.js" />
 var baseurl = 'http://ron975.github.io/Battlelogium/Battlelogium.Core/Javascript';
+
 function injectOnce() {
     if (document.getElementById('_windowbutton') == null) {
         injectScript('_windowbutton', baseurl+'/windowbutton/battlelog.windowbutton.min.js');
@@ -23,11 +24,12 @@ function injectOnce() {
 
 function runCustomJS() {
     try {
-    battlelogplaybar.fixQuickMatchButtons();
-    windowbutton.addWindowButtons();
-    battlelogplaybar.fixEAPlaybarButtons();
-    battlelogplaybar.addPlaybarButton(battlelogplaybar.createPlaybarButton('btnServers', 'SERVERS', 'location.href = "http://battlelog.battlefield.com/bf3/servers/"'));
-    $("#base-header-secondary-nav>ul>li>a:contains('Buy Battlefield 4')").remove();
+        battlelogplaybar.fixQuickMatchButtons();
+        windowbutton.addWindowButtons();
+        windowbutton.updateMaximizeButton();
+        battlelogplaybar.fixEAPlaybarButtons();
+        battlelogplaybar.addPlaybarButton(battlelogplaybar.createPlaybarButton('btnServers', 'SERVERS', 'location.href = "http://battlelog.battlefield.com/bf3/servers/"'));
+        $("#base-header-secondary-nav>ul>li>a:contains('Buy Battlefield 4')").remove();
     } catch (error) {
     }
     if (window.location.href.match(/\/soldier\//) != null) {

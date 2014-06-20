@@ -14,6 +14,7 @@ using Battlelogium.Utilities;
 using System.Diagnostics;
 using System.Net;
 using Battlelogium.Core.Update;
+using System.IO;
 
 namespace Battlelogium.Core.UI
 {
@@ -79,8 +80,15 @@ namespace Battlelogium.Core.UI
             };
             this.mainWindow.PreviewKeyDown += mainWindow_PreviewKeyDown;
             this.mainWindow.PreviewMouseDown += (s, e) => { if (e.ChangedButton == MouseButton.Middle) e.Handled = true; }; //Disable opening link in new window with middle click
-
             this.battlelog.battlelogWebview.PropertyChanged += battlelogWebview_IsLoading;
+            this.mainWindow.StateChanged += (s, e) => {
+                try
+                {
+                    this.battlelog.battlelogWebview.ExecuteScript("windowbutton.updateMaximizeButton()");
+                }catch{
+
+                }
+            };
 
             if (config.ManageOrigin)
             {
@@ -110,12 +118,26 @@ namespace Battlelogium.Core.UI
                     case false:
                         return;
                     case true:
-
-                        Process.Start("Battlelogium.Installer.exe",Process.GetCurrentProcess().Id.ToString());
-                        this.mainWindow.Dispatcher.Invoke(() => this.mainWindow.Close());
+                        await UpdateBattlelogium();
                         break;
                 }
             }
+        }
+
+        internal async Task UpdateBattlelogium()
+        {
+                        string url = await new WebClient().DownloadStringTaskAsync("http://ron975.github.io/Battlelogium/releaseinfo/download/installer");
+                        this.mainWindow.Dispatcher.Invoke(() => this.mainWindow.Hide());
+                        string filename = Path.GetFileName(new Uri(url).LocalPath);
+                        var dl = new UIDownloader(url, filename, "Updating Battlelogium...");
+                        dl.DownloadComplete += (s, e) =>
+                        {
+                            dl.SyncCloseWindow();
+                            Process.Start(e.completedFilePath, @"update "+"\""+Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)+"\"");
+                            this.mainWindow.Dispatcher.Invoke(() => this.mainWindow.Close());
+                        };
+                        dl.Show();
+                        dl.Start();
         }
         private void StartOfflineMode()
         {

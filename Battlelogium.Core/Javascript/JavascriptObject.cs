@@ -12,12 +12,29 @@ namespace Battlelogium.Core.Javascript
     public class JavascriptObject
     {
         private UICore Core;
+        public bool ismaximized {
+            get
+            {
+                switch (this.GetWindowState())
+                {
+                    case WindowState.Maximized:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+
         public JavascriptObject()
         {
 
         }
         public void InitJavascriptObject(UICore core){
             this.Core = core;
+        }
+        public void forceupdate()
+        {
+            this.syncInvoke(() => this.Core.UpdateBattlelogium());
         }
         public void quit()
         {
@@ -29,7 +46,16 @@ namespace Battlelogium.Core.Javascript
             this.syncInvoke(() => this.Core.mainWindow.WindowState = WindowState.Minimized);
             
         }
+        public void maximize()
+        {
+            this.syncInvoke(() => this.Core.mainWindow.WindowState = WindowState.Maximized);
 
+        }
+        public void restore()
+        {
+            this.syncInvoke(() => this.Core.mainWindow.WindowState = WindowState.Normal);
+
+        }
         public void clearcache()
         {
             if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Battlelogium.ExecUtils.exe"))) {
@@ -73,6 +99,13 @@ namespace Battlelogium.Core.Javascript
         private void syncInvoke(Action action)
         {
             this.Core.mainWindow.Dispatcher.Invoke(action);
+        }
+
+        private WindowState GetWindowState()
+        {
+            return this.Core.mainWindow.Dispatcher.Invoke(() => {
+                return this.Core.mainWindow.WindowState;
+            });
         }
     }
 }
