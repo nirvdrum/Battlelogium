@@ -1,0 +1,22 @@
+﻿version: 2.2.0.{build}
+branches:
+    except:
+        - gh-pages
+platform: x86
+configuration:
+    - Debug
+    - Release
+build:
+    project: Battlelogium.sln
+verbosity: normal
+artifacts:
+    - path: Battlelogium.Dist\bin\$(configuration)
+      name: Battlelogium Distributable
+      type: zip
+assembly_info:
+  patch: true
+  file: "SharedAssemblyInfo.cs"
+  assembly_version: "{version}"
+  assembly_file_version: "{version}"
+  assembly_informational_version: "{version}-dirty"
+shallow_clone: true
